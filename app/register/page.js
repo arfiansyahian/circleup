@@ -38,7 +38,16 @@ export default function RegisterPage() {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { phone: form.phone } },
+      options: {
+        data: {
+          phone: form.phone,
+          full_name: form.fullName,
+          nickname: form.nickname,
+          age,
+          gender: form.gender,
+          city: form.city,
+        },
+      },
     });
 
     if (authError) {
@@ -47,22 +56,16 @@ export default function RegisterPage() {
       return;
     }
 
-    const userId = authData.user?.id;
-    if (userId) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        user_id: userId,
-        full_name: form.fullName,
-        nickname: form.nickname,
-        age,
-        gender: form.gender,
-        city: form.city,
-        role: "participant",
-      });
-      if (profileError) {
-        setError(profileError.message);
-        setLoading(false);
-        return;
-      }
+    // Row di tabel profiles dibuat otomatis oleh trigger database (on_auth_user_created)
+    // begitu akun auth dibuat — jadi aman walau sesi belum aktif (mis. email belum dikonfirmasi).
+
+    if (!authData.session) {
+      // Project ini mewajibkan konfirmasi email sebelum bisa login.
+      setLoading(false);
+      setError(
+        "Akun berhasil dibuat. Cek email kamu dan klik link konfirmasi sebelum login untuk lanjut buat profile."
+      );
+      return;
     }
 
     setLoading(false);

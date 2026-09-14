@@ -43,6 +43,39 @@ Conversation prompts otomatis lebih kaya, referral reward otomatis, personality/
 insight, gamifikasi, in-app chat, dan broader discovery sengaja **belum** dibuat — sesuai prinsip
 MVP di blueprint ("curated, not infinite" & fokus P0 dulu).
 
+## Status saat ini
+
+✅ Sudah diprovision otomatis ke akun Supabase kamu:
+- Project baru **`circleup`** (terpisah dari project finance tracker kamu yang lama) — id `rkqrnrekouiigscvwcal`, region ap-southeast-1.
+- Seluruh schema database (15 tabel) + Row Level Security policies sudah terpasang dan lolos security advisor (0 warning).
+- Storage bucket `photos` (public, untuk foto profil) sudah dibuat.
+- `.env.local` di folder ini **sudah diisi** URL + anon key project tersebut — langsung `npm install && npm run dev` bisa jalan.
+- Git repo lokal sudah di-`git init` + commit pertama, tinggal push ke GitHub kamu.
+
+⏳ Belum bisa aku lakukan otomatis (butuh akses yang belum tersedia lewat tool):
+- **Push ke GitHub** — belum ada koneksi GitHub, jadi kamu perlu jalankan 3 baris command di bawah.
+- **Deploy ke Vercel** — connector Vercel kamu baru sebagian terhubung (OAuth belum selesai) dan tools yang tersedia cuma read-only (lihat project/deployment, tidak bisa create/deploy). Jadi import project ke Vercel tetap manual lewat dashboard, tapi cuma ambil ±2 menit karena env var sudah aku siapkan di bawah.
+
+## Push ke GitHub & deploy
+
+```bash
+# di folder circleup/ ini
+git remote add origin https://github.com/<username-kamu>/circleup.git
+git branch -M main
+git push -u origin main
+```
+
+Lalu di https://vercel.com → **Add New Project** → import repo `circleup` → sebelum klik deploy, isi Environment Variables:
+
+| Key | Value |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://rkqrnrekouiigscvwcal.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (lihat file `.env.local` di project ini) |
+
+Klik **Deploy**. Setelah selesai, hubungkan domain kamu di tab **Domains**.
+
+## Setup awal (sudah otomatis, referensi saja)
+
 ## Cara menjalankan
 
 ### 1. Setup Supabase

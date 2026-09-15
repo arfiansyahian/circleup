@@ -13,14 +13,22 @@ export default function AdminParticipantsPage() {
   const [eventId, setEventId] = useState("");
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState("all");
+  const [role, setRole] = useState(null);
 
   useEffect(() => {
     (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user.id).single();
+        setRole(profile?.role || "crew");
+      }
       const { data } = await supabase.from("events").select("id, name").order("date", { ascending: false });
       setEvents(data || []);
       if (data?.[0]) setEventId(data[0].id);
     })();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (eventId) load();
@@ -51,10 +59,11 @@ export default function AdminParticipantsPage() {
   }
 
   const filtered = filter === "all" ? rows : rows.filter((r) => r.status === filter);
+  const isAdmin = role === "admin";
 
   return (
     <div>
-      <h1 style={{ fontSize: 28 }}>Participants</h1>
+      <h1 style={{ fontSize: 28 }}>{isAdmin ? "Participants" : "Check-in"}</h1>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
@@ -93,9 +102,13 @@ export default function AdminParticipantsPage() {
               <td>{r.status}</td>
               <td>{r.checked_in_at ? "✅" : "—"}</td>
               <td style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <button className="chip" onClick={() => setStatus(r.id, "approved")}>Approve</button>
-                <button className="chip" onClick={() => setStatus(r.id, "waitlist")}>Waitlist</button>
-                <button className="chip" onClick={() => setStatus(r.id, "rejected")}>Reject</button>
+                {isAdmin && (
+                  <>
+                    <button className="chip" onClick={() => setStatus(r.id, "approved")}>Approve</button>
+                    <button className="chip" onClick={() => setStatus(r.id, "waitlist")}>Waitlist</button>
+                    <button className="chip" onClick={() => setStatus(r.id, "rejected")}>Reject</button>
+                  </>
+                )}
                 {r.status === "approved" && !r.checked_in_at && (
                   <button className="chip selected" onClick={() => checkIn(r.id)}>Check-in</button>
                 )}

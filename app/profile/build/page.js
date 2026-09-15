@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabaseClient";
 
@@ -16,8 +16,10 @@ const INTENTS = [
   { value: "open_to_both", label: "Open to both" },
 ];
 
-export default function BuildProfilePage() {
+function BuildProfileInner() {
   const router = useRouter();
+  const params = useSearchParams();
+  const eventId = params.get("event") || "";
   const supabase = createClient();
   const [form, setForm] = useState({
     occupation: "",
@@ -118,7 +120,8 @@ export default function BuildProfilePage() {
     }
 
     setSaving(false);
-    router.push("/profile/preview");
+    const qs = eventId ? `?event=${eventId}` : "";
+    router.push(`/profile/preview${qs}`);
   }
 
   return (
@@ -215,5 +218,13 @@ export default function BuildProfilePage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function BuildProfilePage() {
+  return (
+    <Suspense fallback={<div className="container">Memuat...</div>}>
+      <BuildProfileInner />
+    </Suspense>
   );
 }

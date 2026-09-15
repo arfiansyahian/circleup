@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { createClient } from "@/lib/supabaseClient";
 
-export default function RegisterPage() {
+function RegisterInner() {
   const router = useRouter();
+  const params = useSearchParams();
+  const eventId = params.get("event") || "";
   const supabase = createClient();
   const [form, setForm] = useState({
     fullName: "",
@@ -18,6 +20,7 @@ export default function RegisterPage() {
     dob: "",
     gender: "",
     city: "",
+    referralCode: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,11 +59,9 @@ export default function RegisterPage() {
       return;
     }
 
-    // Row di tabel profiles dibuat otomatis oleh trigger database (on_auth_user_created)
-    // begitu akun auth dibuat — jadi aman walau sesi belum aktif (mis. email belum dikonfirmasi).
+    // Row di tabel profiles dibuat otomatis oleh trigger database (on_auth_user_created).
 
     if (!authData.session) {
-      // Project ini mewajibkan konfirmasi email sebelum bisa login.
       setLoading(false);
       setError(
         "Akun berhasil dibuat. Cek email kamu dan klik link konfirmasi sebelum login untuk lanjut buat profile."
@@ -68,8 +69,26 @@ export default function RegisterPage() {
       return;
     }
 
+    // Redeem referral code (kalau ada).
+    if (form.referralCode.trim()) {
+      const code = form.referralCode.trim().toUpperCase();
+      const { data: referrer } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .ilike("user_id", `${code}%`)
+        .maybeSingle();
+      if (referrer && referrer.user_id !== authData.user.id) {
+        await supabase.from("referrals").insert({
+          referrer_id: referrer.user_id,
+          referred_user_id: authData.user.id,
+          event_id: eventId || null,
+        });
+      }
+    }
+
     setLoading(false);
-    router.push("/profile/build");
+    const qs = eventId ? `?event=${eventId}` : "";
+    router.push(`/profile/build${qs}`);
   }
 
   return (
@@ -124,6 +143,14 @@ export default function RegisterPage() {
             <label>Kota domisili</label>
             <input required value={form.city} onChange={(e) => update("city", e.target.value)} />
           </div>
+          <div className="field">
+            <label>Kode referral (opsional)</label>
+            <input
+              value={form.referralCode}
+              onChange={(e) => update("referralCode", e.target.value)}
+              placeholder="mis. AB12CD34"
+            />
+          </div>
 
           {error && <p className="error-text">{error}</p>}
 
@@ -137,5 +164,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="container">Memuat...</div>}>
+      <RegisterInner />
+    </Suspense>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import TabBar from "@/components/TabBar";
 import { createClient } from "@/lib/supabaseClient";
 
@@ -8,6 +9,7 @@ export default function MyMatchesPage() {
   const supabase = createClient();
   const [matches, setMatches] = useState([]);
   const [profiles, setProfiles] = useState({});
+  const [contacts, setContacts] = useState({});
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
@@ -32,6 +34,13 @@ export default function MyMatchesPage() {
         (ps || []).forEach((p) => (map[p.user_id] = p));
         setProfiles(map);
       }
+
+      const contactMap = {};
+      for (const m of ms || []) {
+        const { data: revealed } = await supabase.rpc("reveal_contact", { p_match_id: m.id });
+        contactMap[m.id] = (revealed || []).filter((r) => r.handle);
+      }
+      setContacts(contactMap);
     })();
   }, []);
 
@@ -43,11 +52,25 @@ export default function MyMatchesPage() {
         {matches.map((m) => {
           const partnerId = m.user_a === userId ? m.user_b : m.user_a;
           const p = profiles[partnerId];
+          const revealed = contacts[m.id] || [];
           return (
             <div key={m.id} className="card">
               <strong>{p?.nickname}</strong>
               <p className="muted" style={{ margin: "4px 0" }}>{m.events?.name}</p>
-              <span className="pill pill-approved">{m.connection_status.replaceAll("_", " ")}</span>
+
+              {revealed.length > 0 ? (
+                revealed.map((r) => (
+                  <p key={r.channel} style={{ margin: "2px 0" }}>
+                    {r.channel === "instagram" ? "Instagram" : "WhatsApp"}: <strong>{r.handle}</strong>
+                  </p>
+                ))
+              ) : (
+                <Link href={`/connect?match=${m.id}`}>
+                  <button className="btn btn-secondary" style={{ marginTop: 8 }}>
+                    LANJUT KE CONNECT
+                  </button>
+                </Link>
+              )}
             </div>
           );
         })}

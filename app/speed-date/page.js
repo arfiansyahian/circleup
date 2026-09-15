@@ -14,6 +14,7 @@ export default function SpeedDatePage() {
   const [round, setRound] = useState(null);
   const [partner, setPartner] = useState(null);
   const [interests, setInterests] = useState([]);
+  const [readyRoundId, setReadyRoundId] = useState(null); // round.id yang sudah di-acknowledge peserta
 
   async function loadRoundAndPartner(uid, evId) {
     const { data: r } = await supabase
@@ -102,17 +103,35 @@ export default function SpeedDatePage() {
     );
   }
 
+  const hasAcknowledged = readyRoundId === round.id;
+
   return (
     <div className="container">
       <p className="pill pill-active" style={{ marginBottom: 12 }}>
         Round {round.round_number}
       </p>
 
-      {round.status === "ready" && (
-        <p className="muted" style={{ marginBottom: 8 }}>Bersiap, percakapan akan segera dimulai…</p>
+      <ProfileCard profile={partner} interests={interests} prompt={round.prompt} />
+
+      {round.status === "ready" && !hasAcknowledged && (
+        <>
+          <p className="muted" style={{ marginBottom: 8 }}>
+            Ini partner kamu untuk round ini. Siap-siap ngobrol!
+          </p>
+          <button className="btn btn-primary" onClick={() => setReadyRoundId(round.id)}>
+            I'M READY
+          </button>
+        </>
       )}
 
-      <ProfileCard profile={partner} interests={interests} prompt={round.prompt} />
+      {round.status === "ready" && hasAcknowledged && (
+        <>
+          <p className="muted" style={{ marginBottom: 8 }}>Menunggu admin memulai timer…</p>
+          <div className="timer-circle" style={{ opacity: 0.6 }}>
+            {String(Math.floor(round.duration_seconds / 60)).padStart(2, "0")}:00
+          </div>
+        </>
+      )}
 
       {round.status === "active" && round.server_start_at && (
         <RoundTimer
@@ -120,12 +139,6 @@ export default function SpeedDatePage() {
           durationSeconds={round.duration_seconds}
           onTimeUp={() => partner && router.push(`/vote?round=${round.id}&partner=${partner.user_id}`)}
         />
-      )}
-
-      {round.status === "ready" && (
-        <div className="timer-circle" style={{ opacity: 0.6 }}>
-          {String(Math.floor(round.duration_seconds / 60)).padStart(2, "0")}:00
-        </div>
       )}
     </div>
   );

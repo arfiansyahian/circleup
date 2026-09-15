@@ -17,6 +17,7 @@ export default function AdminEventsPage() {
     number_of_rounds: 6,
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   async function load() {
     const { data } = await supabase.from("events").select("*").order("date", { ascending: false });
@@ -30,8 +31,15 @@ export default function AdminEventsPage() {
   async function createEvent(e) {
     e.preventDefault();
     setSaving(true);
-    await supabase.from("events").insert({ ...form, status: "draft" });
+    setError("");
+    const { error: insertError } = await supabase
+      .from("events")
+      .insert({ ...form, status: "draft" });
     setSaving(false);
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
     setForm({ name: "", slug: "", date: "", location: "", capacity: 20, round_duration_minutes: 6, number_of_rounds: 6 });
     load();
   }
@@ -74,6 +82,7 @@ export default function AdminEventsPage() {
           <button className="btn btn-primary" disabled={saving} type="submit">
             {saving ? "Menyimpan..." : "BUAT EVENT"}
           </button>
+          {error && <p className="error-text">{error}</p>}
         </form>
       </div>
 

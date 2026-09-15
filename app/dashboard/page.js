@@ -69,7 +69,7 @@ export default function DashboardPage() {
       case "speed_dating":
         return { href: "/speed-date", label: "MASUK SPEED DATE" };
       case "chikology":
-        return { href: "/dashboard", label: "MENUNGGU SESI CHIKOLOGY" };
+        return { href: "/chikology", label: "MASUK CHIKOLOGY" };
       case "match_reveal":
         return { href: "/match-reveal", label: "LIHAT MATCH REVEAL" };
       default:
@@ -100,6 +100,11 @@ export default function DashboardPage() {
               Status aplikasimu sedang <strong>{registration.status}</strong>. Kami akan
               mengabari begitu curation selesai.
             </p>
+            <Link href="/application-status">
+              <button className="btn btn-secondary" style={{ marginTop: 10 }}>
+                LIHAT DETAIL STATUS
+              </button>
+            </Link>
           </div>
         ) : (
           <>

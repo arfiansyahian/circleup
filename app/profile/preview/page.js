@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import ProfileCard from "@/components/ProfileCard";
 import { createClient } from "@/lib/supabaseClient";
 
-export default function ProfilePreviewPage() {
+function ProfilePreviewInner() {
   const router = useRouter();
+  const params = useSearchParams();
   const supabase = createClient();
   const [profile, setProfile] = useState(null);
   const [interests, setInterests] = useState([]);
+  const [openEvents, setOpenEvents] = useState([]);
+  const [eventId, setEventId] = useState(params.get("event") || "");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -30,14 +34,58 @@ export default function ProfilePreviewPage() {
         .select("interests(name)")
         .eq("user_id", user.id);
       setInterests((rows || []).map((r) => r.interests?.name).filter(Boolean));
+
+      // Kalau belum ada event dipilih (mis. user masuk langsung ke halaman ini),
+      // tawarkan event yang lagi buka pendaftaran.
+      if (!params.get("event")) {
+        const { data: events } = await supabase
+          .from("events")
+          .select("id, name, date")
+          .eq("status", "open_registration")
+          .order("date", { ascending: true });
+        setOpenEvents(events || []);
+      }
     })();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function submitForCuration() {
+    if (!eventId) {
+      setError("Pilih event dulu sebelum submit.");
+      return;
+    }
     setSubmitting(true);
-    // Menandai profile sebagai lengkap; registrasi ke event dilakukan di halaman event detail.
-    setSubmitted(true);
+    setError("");
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error: regError } = await supabase.from("registrations").insert({
+      user_id: user.id,
+      event_id: eventId,
+      status: "pending",
+    });
+
+    if (regError) {
+      setSubmitting(false);
+      if (regError.code === "23505") {
+        // sudah pernah daftar ke event ini — bukan error fatal, tetap lanjut.
+        setSubmitted(true);
+        return;
+      }
+      setError(regError.message);
+      return;
+    }
+
+    // Lengkapi event_id pada referral row (kalau user tadi masuk pakai kode referral sebelum pilih event).
+    await supabase
+      .from("referrals")
+      .update({ event_id: eventId })
+      .eq("referred_user_id", user.id)
+      .is("event_id", null);
+
     setSubmitting(false);
+    setSubmitted(true);
   }
 
   if (!profile) {
@@ -71,24 +119,55 @@ export default function ProfilePreviewPage() {
 
         {submitted ? (
           <div className="card">
-            <p style={{ margin: 0, fontWeight: 600 }}>Profile tersimpan. Sekarang cari event untuk diikuti.</p>
-            <Link href="/">
+            <p style={{ margin: 0, fontWeight: 600 }}>
+              Pendaftaran terkirim — statusmu sekarang "Under Review".
+            </p>
+            <Link href="/application-status">
               <button className="btn btn-primary" style={{ marginTop: 10 }}>
-                LIHAT EVENT
+                LIHAT STATUS APLIKASI
               </button>
             </Link>
           </div>
         ) : (
-          <div style={{ display: "flex", gap: 10 }}>
-            <Link href="/profile/build" style={{ flex: 1 }}>
-              <button className="btn btn-secondary">EDIT PROFILE</button>
-            </Link>
-            <button className="btn btn-primary" style={{ flex: 1 }} disabled={submitting} onClick={submitForCuration}>
-              SUBMIT FOR CURATION
-            </button>
-          </div>
+          <>
+            {openEvents.length > 0 && !params.get("event") && (
+              <div className="field">
+                <label>Pilih event</label>
+                <select value={eventId} onChange={(e) => setEventId(e.target.value)}>
+                  <option value="">Pilih event yang mau diikuti</option>
+                  {openEvents.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.name} — {new Date(ev.date).toLocaleDateString("id-ID")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {error && <p className="error-text">{error}</p>}
+            <div style={{ display: "flex", gap: 10 }}>
+              <Link href="/profile/build" style={{ flex: 1 }}>
+                <button className="btn btn-secondary">EDIT PROFILE</button>
+              </Link>
+              <button
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                disabled={submitting}
+                onClick={submitForCuration}
+              >
+                {submitting ? "Mengirim..." : "SUBMIT FOR CURATION"}
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
+  );
+}
+
+export default function ProfilePreviewPage() {
+  return (
+    <Suspense fallback={<div className="container">Memuat...</div>}>
+      <ProfilePreviewInner />
+    </Suspense>
   );
 }

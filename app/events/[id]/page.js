@@ -25,6 +25,13 @@ export default async function EventDetailPage({ params }) {
         </p>
         <p>{event.description}</p>
 
+        <div className="card" style={{ background: "var(--forest)", color: "#fff", textAlign: "center" }}>
+          <p className="muted" style={{ color: "#dfe9e2", margin: 0 }}>Harga tiket</p>
+          <h2 style={{ color: "#fff", margin: "4px 0 0" }}>
+            {event.price_rupiah > 0 ? `Rp${event.price_rupiah.toLocaleString("id-ID")}` : "Gratis"}
+          </h2>
+        </div>
+
         <div className="card">
           <strong>Opening</strong>
           <p className="muted" style={{ margin: 0 }}>

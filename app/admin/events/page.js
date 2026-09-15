@@ -4,18 +4,22 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabaseClient";
 
+const emptyForm = {
+  name: "",
+  slug: "",
+  description: "",
+  date: "",
+  location: "",
+  price_rupiah: 0,
+  capacity: 20,
+  round_duration_minutes: 6,
+  number_of_rounds: 6,
+};
+
 export default function AdminEventsPage() {
   const supabase = createClient();
   const [events, setEvents] = useState([]);
-  const [form, setForm] = useState({
-    name: "",
-    slug: "",
-    date: "",
-    location: "",
-    capacity: 20,
-    round_duration_minutes: 6,
-    number_of_rounds: 6,
-  });
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -40,7 +44,7 @@ export default function AdminEventsPage() {
       setError(insertError.message);
       return;
     }
-    setForm({ name: "", slug: "", date: "", location: "", capacity: 20, round_duration_minutes: 6, number_of_rounds: 6 });
+    setForm(emptyForm);
     load();
   }
 
@@ -60,12 +64,33 @@ export default function AdminEventsPage() {
             <input required value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
           </div>
           <div className="field">
+            <label>Deskripsi event</label>
+            <textarea
+              rows={4}
+              required
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Cerita singkat tentang event ini — vibe, siapa yang cocok ikut, apa yang bakal terjadi..."
+            />
+          </div>
+          <div className="field">
             <label>Tanggal & jam</label>
             <input required type="datetime-local" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
           </div>
           <div className="field">
             <label>Lokasi</label>
             <input required value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          </div>
+          <div className="field">
+            <label>Harga tiket (Rupiah, isi 0 kalau gratis)</label>
+            <input
+              required
+              type="number"
+              min={0}
+              step={1000}
+              value={form.price_rupiah}
+              onChange={(e) => setForm({ ...form, price_rupiah: Number(e.target.value) })}
+            />
           </div>
           <div className="field">
             <label>Kapasitas</label>
@@ -91,6 +116,7 @@ export default function AdminEventsPage() {
           <tr>
             <th>Nama</th>
             <th>Tanggal</th>
+            <th>Harga</th>
             <th>Status</th>
             <th>Kapasitas</th>
             <th></th>
@@ -101,6 +127,7 @@ export default function AdminEventsPage() {
             <tr key={ev.id}>
               <td>{ev.name}</td>
               <td>{new Date(ev.date).toLocaleDateString("id-ID")}</td>
+              <td>{ev.price_rupiah > 0 ? `Rp${ev.price_rupiah.toLocaleString("id-ID")}` : "Gratis"}</td>
               <td>{ev.status.replaceAll("_", " ")}</td>
               <td>{ev.capacity}</td>
               <td>

@@ -6,7 +6,7 @@ export default async function LandingPage() {
   const supabase = createClient();
   const { data: events } = await supabase
     .from("events")
-    .select("id, name, slug, date, location")
+    .select("id, name, slug, date, location, price_rupiah")
     .neq("status", "draft")
     .order("date", { ascending: true })
     .limit(3);
@@ -70,7 +70,12 @@ export default async function LandingPage() {
             {events.map((e) => (
               <Link key={e.id} href={`/events/${e.slug}`}>
                 <div className="card">
-                  <strong>{e.name}</strong>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                    <strong>{e.name}</strong>
+                    <span className="pill pill-active">
+                      {e.price_rupiah > 0 ? `Rp${e.price_rupiah.toLocaleString("id-ID")}` : "Gratis"}
+                    </span>
+                  </div>
                   <p className="muted" style={{ margin: 0 }}>
                     {new Date(e.date).toLocaleDateString("id-ID", {
                       dateStyle: "full",

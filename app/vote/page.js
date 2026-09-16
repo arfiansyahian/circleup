@@ -16,9 +16,9 @@ function VoteInner() {
   const [submitted, setSubmitted] = useState(false);
 
   const options = [
-    { value: "interested", label: "Interested" },
-    { value: "maybe", label: "Maybe" },
-    { value: "not_for_me", label: "Not for me" },
+    { value: "interested", label: "♥ INTERESTED" },
+    { value: "maybe", label: "? MAYBE" },
+    { value: "not_for_me", label: "✕ NOT FOR ME" },
   ];
 
   async function submitVote() {
@@ -71,6 +71,11 @@ function VoteInner() {
           {o.label}
         </button>
       ))}
+
+      <div className="card" style={{ background: "#f4d9d4", border: "none" }}>
+        <strong style={{ color: "var(--terracotta)" }}>PRIVATE BY DEFAULT</strong>
+        <p style={{ margin: "4px 0 0" }}>Nobody sees who you voted for. Mutual "Interested" creates a match.</p>
+      </div>
 
       <button className="btn btn-primary" disabled={!selected || submitting} onClick={submitVote}>
         {submitting ? "Menyimpan..." : "KIRIM VOTE"}

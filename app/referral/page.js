@@ -8,6 +8,7 @@ export default function ReferralPage() {
   const supabase = createClient();
   const [code, setCode] = useState("");
   const [referrals, setReferrals] = useState([]);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -25,6 +26,35 @@ export default function ReferralPage() {
 
   const rewarded = referrals.filter((r) => r.reward_status === "rewarded").length;
 
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard API bisa gagal di beberapa browser — abaikan diam-diam
+    }
+  }
+
+  async function inviteFriend() {
+    const text = `Yuk ikutan CircleUp Re:Date! Pakai kode referral aku: ${code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {
+        // user cancel share sheet — fallback ke copy
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // abaikan
+    }
+  }
+
   return (
     <div>
       <div className="container">
@@ -35,7 +65,7 @@ export default function ReferralPage() {
         </div>
         <div className="kpi-grid">
           <div className="kpi-card">
-            <p className="muted" style={{ margin: 0 }}>Total referral</p>
+            <p className="muted" style={{ margin: 0 }}>Referrals</p>
             <p className="value">{referrals.length}</p>
           </div>
           <div className="kpi-card">
@@ -43,7 +73,15 @@ export default function ReferralPage() {
             <p className="value">{rewarded}</p>
           </div>
         </div>
-        <p className="muted">Bagikan kode ini ke temanmu saat mereka mendaftar Re:Date berikutnya.</p>
+
+        <button className="btn btn-secondary" onClick={copyCode}>
+          {copied ? "TERSALIN ✓" : "COPY CODE"}
+        </button>
+        <button className="btn btn-primary" style={{ marginTop: 10 }} onClick={inviteFriend}>
+          INVITE A FRIEND
+        </button>
+
+        <p className="muted" style={{ marginTop: 14 }}>Bagikan kode ini ke temanmu saat mereka mendaftar Re:Date berikutnya.</p>
       </div>
       <TabBar />
     </div>

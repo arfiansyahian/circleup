@@ -96,9 +96,7 @@ function RegisterInner() {
       <Navbar />
       <div className="container">
         <h1 style={{ fontSize: 30 }}>Create Account</h1>
-        <p className="muted">
-          Email dan nomor telepon bersifat privat — tidak akan pernah ditampilkan ke peserta lain.
-        </p>
+        <p className="muted">Registrasi singkat — detail dating cuma dipakai buat curation & pairing.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="field">
@@ -150,6 +148,11 @@ function RegisterInner() {
               onChange={(e) => update("referralCode", e.target.value)}
               placeholder="mis. AB12CD34"
             />
+          </div>
+
+          <div className="card" style={{ background: "#f4d9d4", border: "none" }}>
+            <strong style={{ color: "var(--terracotta)" }}>PRIVACY</strong>
+            <p style={{ margin: "4px 0 0" }}>Kontak kamu (email & nomor HP) tidak pernah ditampilkan ke peserta lain.</p>
           </div>
 
           {error && <p className="error-text">{error}</p>}

@@ -53,6 +53,18 @@ export default function MingleGamePage() {
         <h1 style={{ fontSize: 28 }}>Mingle Game</h1>
         <p className="muted">Human Bingo — cari orang yang cocok dengan tantangan berikut, lalu tandai selesai.</p>
 
+        {challenges.length > 0 && (
+          <div className="card" style={{ textAlign: "center" }}>
+            <h2 style={{ margin: 0 }}>{done.size} / {challenges.length} COMPLETED</h2>
+            <div className="slot-track" style={{ marginTop: 10 }}>
+              <div
+                className="slot-fill"
+                style={{ width: `${challenges.length ? (done.size / challenges.length) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         {challenges.length === 0 && (
           <p className="muted">Belum ada challenge untuk event ini. Tunggu instruksi crew.</p>
         )}

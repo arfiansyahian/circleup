@@ -59,6 +59,11 @@ function ConnectInner() {
         yang sama (consent-based, dua arah).
       </p>
 
+      <div className="card" style={{ background: "#f4d9d4", border: "none" }}>
+        <strong style={{ color: "var(--terracotta)" }}>CONSENT</strong>
+        <p style={{ margin: "4px 0 0" }}>Kontak nggak pernah otomatis kebuka — cuma setelah dua-duanya sengaja share.</p>
+      </div>
+
       {revealed.length > 0 && (
         <div className="card" style={{ background: "var(--forest)", color: "#fff" }}>
           <strong>Kontak partner kamu:</strong>

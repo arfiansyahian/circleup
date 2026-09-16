@@ -64,6 +64,7 @@ export default function AdminMatchesPage() {
   return (
     <div>
       <h1 style={{ fontSize: 28 }}>Matches</h1>
+      <div className="gold-divider" style={{ marginTop: 0 }} />
 
       <select value={eventId} onChange={(e) => setEventId(e.target.value)} style={{ marginBottom: 16 }}>
         {events.map((ev) => (

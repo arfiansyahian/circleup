@@ -15,6 +15,7 @@ export default function SpeedDatePage() {
   const [partner, setPartner] = useState(null);
   const [interests, setInterests] = useState([]);
   const [readyRoundId, setReadyRoundId] = useState(null); // round.id yang sudah di-acknowledge peserta
+  const [tableNumber, setTableNumber] = useState(null);
 
   async function loadRoundAndPartner(uid, evId) {
     const { data: r } = await supabase
@@ -45,6 +46,7 @@ export default function SpeedDatePage() {
     }
 
     const partnerId = pairing.participant_a === uid ? pairing.participant_b : pairing.participant_a;
+    setTableNumber(pairing.table_number);
     const { data: p } = await supabase.from("profiles").select("*").eq("user_id", partnerId).single();
     setPartner(p);
 
@@ -108,7 +110,7 @@ export default function SpeedDatePage() {
   return (
     <div className="container">
       <p className="pill pill-active" style={{ marginBottom: 12 }}>
-        Round {round.round_number}
+        Round {round.round_number}{tableNumber ? ` • Table ${tableNumber}` : ""}
       </p>
 
       <ProfileCard profile={partner} interests={interests} prompt={round.prompt} />

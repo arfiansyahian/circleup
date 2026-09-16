@@ -67,7 +67,10 @@ export default function EventPassPage() {
               new Date(registration.events.date).toLocaleDateString("id-ID", { dateStyle: "full" })}
           </p>
         </div>
-        <p className="muted">Tunjukkan QR ini ke crew saat check-in di venue.</p>
+        <div className="card" style={{ background: "#f4d9d4", border: "none", textAlign: "left" }}>
+          <strong style={{ color: "var(--terracotta)" }}>ARRIVAL</strong>
+          <p style={{ margin: "4px 0 0" }}>Tunjukkan QR ini ke crew CircleUp saat check-in.</p>
+        </div>
       </div>
       <TabBar />
     </div>

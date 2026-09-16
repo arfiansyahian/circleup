@@ -44,11 +44,22 @@ export default function MyMatchesPage() {
     })();
   }, []);
 
+  const eventName = matches[0]?.events?.name;
+
   return (
     <div>
       <div className="container">
         <h1 style={{ fontSize: 28 }}>My Matches</h1>
-        {matches.length === 0 && <p className="muted">Belum ada mutual connection.</p>}
+
+        {matches.length === 0 ? (
+          <p className="muted">Belum ada mutual connection.</p>
+        ) : (
+          <div className="card" style={{ background: "var(--forest)", color: "#fff" }}>
+            <p className="muted" style={{ color: "#dfe9e2", margin: 0 }}>EVENT RECAP</p>
+            <strong>{matches.length} mutual match{matches.length > 1 ? "es" : ""} • {eventName}</strong>
+          </div>
+        )}
+
         {matches.map((m) => {
           const partnerId = m.user_a === userId ? m.user_b : m.user_a;
           const p = profiles[partnerId];
@@ -56,14 +67,18 @@ export default function MyMatchesPage() {
           return (
             <div key={m.id} className="card">
               <strong>{p?.nickname}</strong>
-              <p className="muted" style={{ margin: "4px 0" }}>{m.events?.name}</p>
+              <p className="muted" style={{ margin: "4px 0" }}>
+                Mutual match • {revealed.length > 0 ? "Contact shared" : "Belum connect"}
+              </p>
 
               {revealed.length > 0 ? (
-                revealed.map((r) => (
-                  <p key={r.channel} style={{ margin: "2px 0" }}>
-                    {r.channel === "instagram" ? "Instagram" : "WhatsApp"}: <strong>{r.handle}</strong>
-                  </p>
-                ))
+                <div>
+                  {revealed.map((r) => (
+                    <span key={r.channel} className="chip selected" style={{ marginRight: 6 }}>
+                      {r.channel === "instagram" ? "Instagram" : "WhatsApp"}: {r.handle}
+                    </span>
+                  ))}
+                </div>
               ) : (
                 <Link href={`/connect?match=${m.id}`}>
                   <button className="btn btn-secondary" style={{ marginTop: 8 }}>

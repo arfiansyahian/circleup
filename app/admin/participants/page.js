@@ -91,6 +91,7 @@ export default function AdminParticipantsPage() {
   return (
     <div>
       <h1 style={{ fontSize: 28 }}>{isAdmin ? "Participants" : "Check-in"}</h1>
+      <div className="gold-divider" style={{ marginTop: 0 }} />
 
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <select value={eventId} onChange={(e) => setEventId(e.target.value)}>

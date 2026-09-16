@@ -60,6 +60,8 @@ export default function FeedbackPage() {
     <div>
       <div className="container">
         <h1 style={{ fontSize: 28 }}>Feedback</h1>
+        <p className="muted">How was your experience?</p>
+        <div className="gold-divider" />
 
         {DIMENSIONS.map((d) => (
           <div className="field" key={d.key}>

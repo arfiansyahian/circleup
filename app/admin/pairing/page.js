@@ -127,6 +127,7 @@ export default function AdminPairingPage() {
   return (
     <div>
       <h1 style={{ fontSize: 28 }}>Pairing Management</h1>
+      <div className="gold-divider" style={{ marginTop: 0 }} />
 
       <div className="card">
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>

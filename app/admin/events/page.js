@@ -71,6 +71,7 @@ export default function AdminEventsPage() {
   return (
     <div>
       <h1 style={{ fontSize: 28 }}>Events</h1>
+      <div className="gold-divider" style={{ marginTop: 0 }} />
 
       <div className="card">
         <strong>Buat event baru</strong>

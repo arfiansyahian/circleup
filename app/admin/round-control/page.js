@@ -80,6 +80,7 @@ export default function AdminRoundControlPage() {
   return (
     <div>
       <h1 style={{ fontSize: 28 }}>Round Control & Live Monitor</h1>
+      <div className="gold-divider" style={{ marginTop: 0 }} />
 
       <select value={eventId} onChange={(e) => setEventId(e.target.value)} style={{ marginBottom: 16 }}>
         {events.map((ev) => (

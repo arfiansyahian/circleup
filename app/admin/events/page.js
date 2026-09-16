@@ -11,6 +11,7 @@ const emptyForm = {
   date: "",
   location: "",
   price_rupiah: 0,
+  cover_image_url: "",
   capacity: 20,
   round_duration_minutes: 6,
   number_of_rounds: 6,
@@ -21,7 +22,26 @@ export default function AdminEventsPage() {
   const [events, setEvents] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+
+  async function handleCoverUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+
+    const path = `events/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("photos").upload(path, file, { upsert: true });
+    if (uploadError) {
+      setError(uploadError.message);
+      setUploading(false);
+      return;
+    }
+    const { data: publicUrl } = supabase.storage.from("photos").getPublicUrl(path);
+    setForm((f) => ({ ...f, cover_image_url: publicUrl.publicUrl }));
+    setUploading(false);
+  }
 
   async function load() {
     const { data } = await supabase.from("events").select("*").order("date", { ascending: false });
@@ -76,6 +96,18 @@ export default function AdminEventsPage() {
           <div className="field">
             <label>Tanggal & jam</label>
             <input required type="datetime-local" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+          </div>
+          <div className="field">
+            <label>Cover image (foto venue/suasana event)</label>
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleCoverUpload} />
+            {uploading && <p className="muted">Mengunggah...</p>}
+            {form.cover_image_url && (
+              <img
+                src={form.cover_image_url}
+                alt="preview"
+                style={{ width: "100%", maxWidth: 300, borderRadius: 12, marginTop: 8 }}
+              />
+            )}
           </div>
           <div className="field">
             <label>Lokasi</label>

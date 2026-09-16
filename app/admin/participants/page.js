@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabaseClient";
 
 function genCode() {
@@ -14,6 +15,8 @@ export default function AdminParticipantsPage() {
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState("all");
   const [role, setRole] = useState(null);
+  const [error, setError] = useState("");
+  const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -35,26 +38,50 @@ export default function AdminParticipantsPage() {
   }, [eventId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load() {
-    const { data } = await supabase
+    const { data, error: loadError } = await supabase
       .from("registrations")
       .select("*, profiles(nickname, full_name, age, city, occupation, dating_intent)")
       .eq("event_id", eventId)
       .order("created_at", { ascending: true });
+    if (loadError) {
+      setError(loadError.message);
+      return;
+    }
     setRows(data || []);
   }
 
   async function setStatus(regId, status) {
+    setBusyId(regId);
+    setError("");
     const patch = { status };
     if (status === "approved") patch.participant_code = genCode();
-    await supabase.from("registrations").update(patch).eq("id", regId);
+
+    const { error: updateError } = await supabase.from("registrations").update(patch).eq("id", regId);
+    if (updateError) {
+      setError(`Gagal update status: ${updateError.message}`);
+      setBusyId(null);
+      return;
+    }
+
     await supabase
       .from("audit_log")
       .insert({ action: "registration_status_change", target_table: "registrations", target_id: regId, metadata: { status } });
+
+    setBusyId(null);
     load();
   }
 
   async function checkIn(regId) {
-    await supabase.from("registrations").update({ checked_in_at: new Date().toISOString() }).eq("id", regId);
+    setBusyId(regId);
+    const { error: updateError } = await supabase
+      .from("registrations")
+      .update({ checked_in_at: new Date().toISOString() })
+      .eq("id", regId);
+    setBusyId(null);
+    if (updateError) {
+      setError(`Gagal check-in: ${updateError.message}`);
+      return;
+    }
     load();
   }
 
@@ -80,6 +107,8 @@ export default function AdminParticipantsPage() {
         </select>
       </div>
 
+      {error && <p className="error-text" style={{ marginBottom: 12 }}>{error}</p>}
+
       <table className="admin-table">
         <thead>
           <tr>
@@ -95,7 +124,11 @@ export default function AdminParticipantsPage() {
         <tbody>
           {filtered.map((r) => (
             <tr key={r.id}>
-              <td>{r.profiles?.nickname}</td>
+              <td>
+                <Link href={`/admin/participants/${r.id}`} style={{ textDecoration: "underline" }}>
+                  {r.profiles?.nickname || "(profil belum lengkap)"}
+                </Link>
+              </td>
               <td>{r.profiles?.age}</td>
               <td>{r.profiles?.city}</td>
               <td>{r.profiles?.dating_intent}</td>
@@ -104,13 +137,13 @@ export default function AdminParticipantsPage() {
               <td style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {isAdmin && (
                   <>
-                    <button className="chip" onClick={() => setStatus(r.id, "approved")}>Approve</button>
-                    <button className="chip" onClick={() => setStatus(r.id, "waitlist")}>Waitlist</button>
-                    <button className="chip" onClick={() => setStatus(r.id, "rejected")}>Reject</button>
+                    <button className="chip" disabled={busyId === r.id} onClick={() => setStatus(r.id, "approved")}>Approve</button>
+                    <button className="chip" disabled={busyId === r.id} onClick={() => setStatus(r.id, "waitlist")}>Waitlist</button>
+                    <button className="chip" disabled={busyId === r.id} onClick={() => setStatus(r.id, "rejected")}>Reject</button>
                   </>
                 )}
                 {r.status === "approved" && !r.checked_in_at && (
-                  <button className="chip selected" onClick={() => checkIn(r.id)}>Check-in</button>
+                  <button className="chip selected" disabled={busyId === r.id} onClick={() => checkIn(r.id)}>Check-in</button>
                 )}
               </td>
             </tr>
